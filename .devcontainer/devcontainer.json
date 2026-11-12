@@ -1,0 +1,37 @@
+{
+  "name": "rwa",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "workspaceFolder": "/workspaces/rwa",
+  "remoteUser": "rstudio",
+  "postCreateCommand": "bash .devcontainer/post_create.sh",
+  "postStartCommand": "sudo rstudio-server start",
+  "shutdownAction": "stopCompose",
+  "forwardPorts": [8787],
+  "portsAttributes": {
+    "8787": {
+      "label": "RStudio"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "REditorSupport.r",
+        "RDebugger.r-debugger",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance",
+        "mechatroner.rainbow-csv"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/workspaces/rwa/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "python.venvPath": "/workspaces/rwa/.venv",
+        "r.rpath.linux": "/usr/local/bin/R",
+        "r.lsp.path": "/usr/local/bin/R",
+        "r.lsp.debug": false
+      }
+    }
+  }
+}

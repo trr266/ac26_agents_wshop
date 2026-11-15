@@ -1,2 +1,13 @@
 logs/
 output/
+PROGRESS.md
+
+.DS_Store
+.Rproj.user
+*.Rproj
+.venv/
+missfont.log
+.quarto/
+*.quarto_ipynb
+docs/*_files/
+*-eps-converted-to.pdf

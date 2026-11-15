@@ -1,0 +1,481 @@
+---
+title: "Agentic coding: Between performance boost and verification debt"
+subtitle: "TRR 266 | Annual Conference 2026 | Leibniz Universität Hannover"
+author: "Joachim Gassen"
+institute: ""
+date: ""
+format:
+  beamer:
+    aspectratio: 169
+    theme: default
+    fontsize: 10pt
+    slide-level: 2
+    pdf-engine: xelatex
+    include-in-header:
+      text: |
+        \usepackage{materials/beamer_theme_trr266_16x9}
+        \usetikzlibrary{arrows.meta,positioning,calc}
+        \usepackage{array}
+        \usepackage{qrcode}
+        % Light tints of the colors defined by the supplied TRR 266 theme.
+        \colorlet{inputfill}{lightbluetrr!25!white}
+        \colorlet{modelfill}{lightpetroltrr!20!white}
+        \colorlet{toolfill}{lightyellowtrr!25!white}
+        \colorlet{inputedge}{bluetrr!65!white}
+        \colorlet{modeledge}{petroltrr!65!white}
+        \colorlet{tooledge}{yellowtrr!65!white}
+        \colorlet{restrictedfill}{lightredtrr!15!white}
+        \colorlet{restrictededge}{redtrr!65!white}
+        \setlength{\emergencystretch}{2em}
+        \setbeamertemplate{footline}[frame number]
+        % More air between list items (Pandoc's \tightlist sets it to zero).
+        \AtBeginDocument{\renewcommand{\tightlist}{\setlength{\itemsep}{.9em}\setlength{\parskip}{0pt}}}
+params:
+  # Poll data slide. Use "live" or "mock" for source.
+  poll_source: live
+  poll_csv_url: "https://docs.google.com/spreadsheets/d/1FwSW0-qTTI5_JI6MYAreJlFJrOG6vxzLN8BF5Dw5U0w/export?format=csv&gid=1137856027"
+execute:
+  eval: false
+---
+
+
+
+## Agentic science: blessing or curse?
+
+- Where do agents save us work, and where do they create new work?
+- How do we set them up, steer them, and fence them in?
+- Can we explain and defend every result we put our name on?
+
+
+## What are we using?
+
+::: {.columns}
+::: {.column width="50%"}
+```{=latex}
+\centering
+\qrcode[height=4.0cm]{https://forms.gle/tLjityqvoXThtrp5A}
+```
+:::
+::: {.column width="50%"}
+**Please answer this short poll**
+
+[forms.gle/tLjityqvoXThtrp5A](https://forms.gle/tLjityqvoXThtrp5A)
+:::
+:::
+
+## Our experience with AI workflows
+
+```{r}
+#| label: audience-poll-results
+#| eval: true
+#| echo: false
+#| message: false
+#| warning: false
+#| cache: false
+#| fig-width: 12.5
+#| fig-height: 4.5
+#| fig-align: center
+#| out-width: 100%
+#| dev: cairo_pdf
+
+# Switch in YAML params above, or set GF_POLL_SOURCE=live and GF_POLL_CSV_URL.
+# Live mode requires the response Sheet's CSV URL, not the respondent form URL.
+source("poll/poll_results.R", local = TRUE)
+poll <- load_poll_data(
+  data_source = params$poll_source, csv_url = params$poll_csv_url
+)
+plot_poll_results(poll)
+```
+
+
+## From ChatGPT to LangChain
+
+```{=latex}
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,>=Latex]
+\begin{scope}[xshift=0cm,x=1cm,y=1cm,>=Latex,
+  block/.style={draw,rounded corners=3pt,minimum width=2.35cm,minimum height=.69cm,align=center,font=\small},
+  arr/.style={-Latex,thin}]
+\node[font=\bfseries,align=center] at (0,.85) {Chat/Completion};
+\node[block,fill=inputfill,draw=inputedge] (prompt) at (0,0) {Prompt};
+\node[block,fill=modelfill,draw=modeledge] (llm) at (0,-1.15) {LLM};
+\node[block,fill=inputfill,draw=inputedge] (answer) at (0,-2.30) {Answer};
+\draw[arr] (prompt) -- (llm);
+\draw[arr] (llm) -- (answer);
+\node[font=\small,text=gray,align=center] at (0,-3.95) {Generate};
+\end{scope}
+\begin{scope}[xshift=4cm,x=1cm,y=1cm,>=Latex,
+  block/.style={draw,rounded corners=3pt,minimum width=2.1cm,minimum height=.62cm,align=center,font=\small},
+  arr/.style={-Latex,thin}]
+\node[font=\bfseries,align=center] at (0,.85) {Agent};
+\node[block,fill=inputfill,draw=inputedge] (goal) at (0,0) {Goal};
+\node[block,fill=modelfill,draw=modeledge] (llm) at (0,-.94) {LLM};
+\node[block,fill=toolfill,draw=tooledge] (tools) at (0,-1.88) {Tools};
+\node[block,fill=inputfill,draw=inputedge] (result) at (0,-2.82) {Result};
+\draw[arr] (goal) -- (llm);
+\draw[arr] (llm) -- (tools);
+\draw[arr] (tools) -- (result);
+\draw[arr] (tools.east) -- ++(.40,0) |- (llm.east);
+\node[font=\small,text=gray,align=center] at (0,-3.95) {Decide + act};
+\end{scope}
+\begin{scope}[xshift=8cm,x=1cm,y=1cm,>=Latex,
+  block/.style={draw,rounded corners=3pt,minimum height=.62cm,align=center,font=\small},
+  sub/.style={draw=tooledge,fill=toolfill,rounded corners=3pt,minimum width=.93cm,minimum height=.61cm,align=center,font=\scriptsize},
+  arr/.style={-Latex,thin}]
+\node[font=\bfseries,align=center] at (0,.85) {Multi-agent};
+\node[block,fill=inputfill,draw=inputedge,minimum width=2.35cm] (goal) at (0,0) {Goal};
+\node[block,fill=modelfill,draw=modeledge,minimum width=2.65cm] (orch) at (0,-.98) {Orchestrator};
+\node[sub] (a) at (-1.10,-2.15) {Data};
+\node[sub] (b) at (0,-2.15) {Code};
+\node[sub] (c) at (1.10,-2.15) {Review};
+\node[block,fill=inputfill,draw=inputedge,minimum width=2.35cm] (result) at (0,-3.28) {Result};
+\draw[arr] (goal) -- (orch);
+\coordinate (split) at (0,-1.5);
+\draw[arr] (orch.south) -- (b.north);
+\draw[arr] (split) -| (a.north);
+\draw[arr] (split) -| (c.north);
+\draw (a.south) -- ++(0,-.2) -| (result.north);
+\draw[arr] (b.south) -- (result.north);
+\draw (c.south) -- ++(0,-.2) -| (result.north);
+\node[font=\small,text=gray,align=center] at (0,-3.95) {Delegate + coordinate};
+\end{scope}
+\end{tikzpicture}
+```
+
+
+## The agent loop
+
+```{=latex}
+\centering
+\begin{tikzpicture}[>=Latex,
+ box/.style={draw=petroltrr,rounded corners,minimum width=2.6cm,minimum height=.8cm,align=center,font=\small}]
+\node[box,fill=inputfill] (goal) at (-4.5,0) {Goal + constraints};
+\node[box,fill=modelfill] (model) at (-1.3,0) {Model decides};
+\node[box,fill=toolfill] (tool) at (2,0) {Tool executes};
+\node[box,fill=inputfill] (obs) at (2,-1.6) {Observe result};
+\node[box] (stop) at (-1.3,-1.6) {Stop / ask / deliver};
+\draw[->,thick] (goal)--(model);
+\draw[->,thick] (model)--(tool);
+\draw[->,thick] (tool)--(obs);
+\draw[->,thick] (obs.west)--(stop.east);
+\draw[->,thick] (obs.east)--++(.5,0)--++(0,2.7)-|(model.north);
+\end{tikzpicture}
+```
+
+An AI agent is an AI model operating in a loop: it reasons, calls tools, observes results, and repeats until a task is complete
+
+
+## Some terms
+
+```{=latex}
+\small
+```
+
+| Term | Role | Example |
+|:--|:--|:--|
+| Instructions | Define goals, behavior, and constraints | System prompt, agent rules |
+| Model | Generates responses and selects actions | GPT, Claude |
+| Tools | Perform actions or retrieve information | Shell, web search, SQL query |
+| MCP | Model Context Protocol: standardizes access to external tools and data | GitHub MCP server |
+| Harness | Runs the model–tool loop and manages execution | Codex CLI, Claude Code |
+| Framework | Provides components for building agents | LangGraph, OpenAI Agents SDK |
+
+: {tbl-colwidths="[20, 50, 30]"}
+
+## The Ralph Wiggum loop: an agent in a Bash loop
+
+```{=latex}
+\centering
+\begin{tikzpicture}[>=Latex,
+ box/.style={draw=petroltrr,rounded corners,minimum width=2.6cm,minimum height=.8cm,align=center,font=\small},
+ lab/.style={font=\scriptsize,text=petroltrr}]
+\node[box,fill=inputfill] (brief) at (-4.5,0) {Brief + prompt};
+\node[box,fill=modelfill] (agent) at (-1.3,0) {Fresh agent run\\[-1pt]{\scriptsize (the agent loop)}};
+\node[box,fill=toolfill] (build) at (2,0) {Build PDF};
+\node[box,fill=inputfill] (check) at (2,-1.6) {DONE + build ok?};
+\node[box] (stop) at (2,-3.0) {Stop / deliver};
+\node[box,fill=inputfill] (memory) at (-1.3,-1.6) {Files as memory\\[-1pt]{\scriptsize PROGRESS.md, output/, build log}};
+\draw[->,thick] (brief)--(agent);
+\draw[->,thick] (agent)--(build);
+\draw[->,thick] (build)--(check);
+\draw[->,thick] (check)--node[lab,right]{yes}(stop);
+\draw[<->,thick,dashed] (agent)--node[lab,right]{read / write}(memory);
+\draw[->,thick] (check.east)--++(.8,0)|-(0,1.1)-|([xshift=.4cm]agent.north)
+  node[lab,pos=.25,above]{no: next iteration, fresh context};
+\end{tikzpicture}
+```
+
+A short shell script restarts a fresh agent until it replies DONE and the documents compile
+
+
+## AI as an RA: a ladder of AI use
+
+**The “Paul Goldsmith-Pinkham ladder of AI use”**
+
+```{=latex}
+\begin{columns}[T,onlytextwidth]
+\begin{column}{.78\textwidth}
+\begingroup\footnotesize
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}>{\centering\arraybackslash}p{.65cm}p{8.9cm}@{}}
+\textbf{Level} & \textbf{What it looks like} \\ \hline
+0 & Copy code from browser chat into your IDE \\
+1 & IDE offers inline completions and inline chat \\
+2 & IDE agent mode reads files, runs tests, and refactors \\
+3 & Dedicated coding agents: Claude Code, Codex CLI, \ldots \\
+4 & Attach tools: web search, scraping, browsing, orchestration \\
+5 & Orchestrate teams of agents in containers
+\end{tabular}
+\endgroup
+\end{column}
+\begin{column}{.20\textwidth}
+\centering
+\begin{tikzpicture}[>=Latex]
+\draw[->,thick,petroltrr] (0,0)--(0,-3.15);
+\node[rotate=90,font=\scriptsize] at (-.25,-1.58) {Coding speed};
+\draw[->,thick,yellowtrr] (.9,0)--(.9,-3.15);
+\node[rotate=90,font=\scriptsize] at (1.15,-1.58) {Verification debt};
+\end{tikzpicture}
+\end{column}
+\end{columns}
+```
+
+
+## Verification debt: the downside of faster coding
+
+**Technical-debt analogy:** code produced quickly can create future maintenance work
+
+```{=latex}
+\begin{beamercolorbox}[rounded=true,sep=.7em,wd=\linewidth]{block body}
+\textbf{Verification debt:} AI-generated code that has not yet been verified by the humans responsible for the project
+\end{beamercolorbox}
+```
+
+- Agents can generate large code bases with little human intervention
+- Their abstractions and coding style can differ from familiar research scripts
+- Code that runs and looks professional can still be difficult to verify
+
+**The relevant saving is time after review, correction, and rerunning**
+
+
+## Some tips for basic agent use
+
+```{=latex}
+% Long list: less space between items on this slide only.
+\renewcommand{\tightlist}{\setlength{\itemsep}{.3em}\setlength{\parskip}{0pt}}
+```
+
+1. Create a separate project copy or Git branch; record the starting state
+2. Make sure that the project folder does not contain any sensitive data 
+   (e.g., API keys, WRDS credentials, ...)
+3. Include an informative README.md (like you would do for humans) that 
+   describes the overall purpose of the project and its workflow
+4. Add an AGENTS.md outlining how the agent should act on the project
+5. Check that the required toolchain (data access, Python/R, shell commands)
+   is available
+6. Start with limited agent permissions and a small, inspectable task
+7. Review the diff and rerun the analysis before accepting/committing the result
+
+**A useful first instruction/task:** "Map the project and propose an audit plan."
+
+
+## Context and memory need maintenance
+
+- Update README.md to reflect the development of the project, always target it
+  to the human reader
+- Update AGENTS.md to reflect project conventions and reproducible commands
+- Break long tasks into batches/stages with concrete deliverables
+- Keep a CHANGES.md to document project history. Try to keep the other files
+  focused on the current state (this is surprisingly hard)
+- Agentic code bloats. Try to keep it clean and parsimonious
+
+
+## A sandbox limits the reach of mistakes
+
+```{=latex}
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm,scale=.66,transform shape,>=Latex,
+  block/.style={draw,rounded corners=3pt,minimum height=.67cm,align=center,font=\small},
+  arr/.style={-Latex,thick},
+  lab/.style={font=\scriptsize,align=center}]
+
+% Task, outside the container.
+\node[block,fill=inputfill,draw=inputedge,minimum width=3.0cm] (goal) at (0,0) {Research task};
+
+% Sandboxed execution environment: the main new concept.
+\draw[rounded corners=9pt,dashed,very thick,draw=modeledge,fill=modelfill!12]
+  (-4.70,-.90) rectangle (4.70,-4.65);
+\node[font=\bfseries\small,text=black!70] at (-2.5,-1.20) {ISOLATED CONTAINER};
+
+\node[block,fill=modelfill,draw=modeledge,minimum width=3.15cm] (agent) at (0,-2.01) {AI agent};
+\node[block,fill=toolfill,draw=tooledge,minimum width=2.85cm] (tools) at (-2.10,-3.38) {Tools: Python / shell};
+\node[block,fill=toolfill,draw=tooledge,minimum width=2.85cm] (work) at (2.10,-3.38) {Scratch workspace};
+
+\draw[arr] (goal) -- (agent);
+\draw[arr] (agent.south) -- ++(0,-.37) -| (tools.north);
+\draw[arr] (agent.south) -- ++(0,-.37) -| (work.north);
+
+% External research files; only an explicit read-only mount is allowed.
+\node[block,fill=restrictedfill,draw=restrictededge,minimum width=3.6cm] (original) at (0,-5.77) {Original research data};
+\draw[arr,dashed,draw=modeledge] (original.north) -- (0,-4.65);
+\node[lab,fill=white,inner sep=2pt] at (1.37,-5.06) {read-only mount\\(if configured)};
+\node[lab,text=redtrr] at (-3.2,-5.78) {No broad host access};
+
+\end{tikzpicture}
+
+
+```
+
+**Restrict mounts, credentials, and network access; keep outputs in a scratch area**
+
+::: notes
+1.5 minutes. Adapted from container_security.qmd. A container is one isolation layer, not a guarantee: broad host mounts or privileged execution defeat the boundary. Read-only access protects integrity but can still expose confidential content.
+:::
+
+## A concrete setup: EconYoloBox
+
+```{=latex}
+\begin{center}
+\includegraphics[width=.94\linewidth,height=.64\textheight,keepaspectratio]{materials/econyolobox.png}
+\end{center}
+```
+
+[chenandrewy/EconYoloBox](https://github.com/chenandrewy/EconYoloBox) 
+
+
+## Privacy depends on where information travels
+
+**Trace the path:** local files → tool output → model context → logs or external services
+
+- Local code execution does not imply local model inference
+- Check institutional rules, data licenses, and the provider's applicable terms
+- Use public/synthetic examples until the environment is approved for the data
+- Treat retrieved documents and repository text as untrusted inputs
+
+**Prompt injection:** a document may contain instructions that try to redirect the agent. Keep tool permissions narrow and inspect consequential actions
+
+
+## Keep the human (you) in the loop
+
+- **Decide what the agent is allowed/supposed to do**: Outsource chores and not
+  the intellectual core of your project
+- **Formalize your workflow**: Define verification steps and document them in 
+  AGENTS.md
+- **Test systematically**: Learn the basics of software test suites and write 
+  tests the agent must pass
+- **Retain control**: Require human approval of changes 
+  (e.g., *only humans commit*)
+- **Verify crucial bits independently**: Verify the key results of the project
+  by verifying them manually
+
+
+## Could you defend the result without the agent?
+
+Before accepting a contribution, can you explain:
+
+- Which data and transformations produced it?
+- Why the implementation matches the intended research design?
+- Which checks passed, and which limitations remain?
+- What you changed after reviewing the agent's work?
+
+
+## When does a second agent help?
+
+**Typical division:** one agent writes an audit and another checks its output against the task
+
+- Give each role a bounded task and explicit evidence to inspect
+- Avoid simultaneous edits to the same files
+- Reconcile disagreements against data and executable checks
+
+**Tradeoff:** parallel work can save time while increasing cost and coordination work
+
+**Agreement among agents does not verify your code**
+
+
+## A recent large-scale use case: does empirical finance replicate?
+
+```{=latex}
+\begin{center}
+\includegraphics[width=.94\linewidth,height=.66\textheight,keepaspectratio]{materials/muravyev_2026_abstract.png}
+\end{center}
+```
+
+
+## Time to share
+
+1. Which task has delivered your largest saving **after verification**?
+2. What do you refuse to delegate, and what evidence would change that?
+3. What would you expect from an AI-assisted coauthor?
+
+
+## Where will this lead? Three speculative scenarios
+
+```{=latex}
+\small
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{@{}p{2.25cm}p{4.9cm}p{5.25cm}@{}}
+\textbf{Scenario} & \textbf{Potential gain} & \textbf{Main concern} \\ \hline
+\textbf{AIs check AIs} & Reproducible pipelines get second-opinion AI audits; faster validation & Unclear human role; shared blind spots and unknown unknowns \\
+\textbf{Humans check AIs} & Human verification is built into research and review; responsibility is documented & Human attention remains a bottleneck; progress can be slower \\
+\textbf{Nobody checks AIs} & Lower immediate production costs without transparent pipelines & Verification becomes costly or impossible; debt grows and peer review comes under pressure
+\end{tabular}
+```
+
+**A possible side effect:** greater demand for research with visible, documented human intervention
+
+# Some (arbitrary and incomplete) pointers
+
+## Agent skills: get feedback on your research {.smaller}
+
+- [AI Research Feedback](https://github.com/claesbackman/AI-research-feedback)
+  — Referee-style paper reviews, identification checks, paper–code
+  consistency, and adversarial code audits
+- [MixtapeTools](https://github.com/scunning1975/MixtapeTools)
+  — Scott Cunningham's workflows for empirical research, code audits,
+  replication, presentations, and research management
+- [Awesome Econ AI Stuff](https://github.com/meleantonio/awesome-econ-ai-stuff)
+  — Reusable skills for econometrics, data cleaning, Stata, R, Python,
+  and academic writing
+
+
+## Connect agents to your research tools {.smaller}
+
+- [Stata MCP](https://github.com/hanlulong/stata-mcp)
+  — Let coding agents execute Stata commands and do-files, inspect
+  results, and iterate on analysis code
+- [EdgarTools](https://github.com/dgunning/edgartools)
+  — Python tools and agent integrations for SEC filings, XBRL
+  financials, and corporate disclosures
+- [Zotero MCP](https://github.com/54yyyu/zotero-mcp)
+  — Connect agents to your reference library, papers, and annotations
+
+
+
+## Agent systems: automate research workflows (use at your own risk) {.smaller}
+
+- [Claude Code Academic Workflow](https://github.com/pedrohcgs/claude-code-my-workflow)
+  — Pedro Sant'Anna's ready-to-fork setup for academic projects,
+  with specialized agents, review loops, and quality gates
+- [PaperQA2](https://github.com/Future-House/paper-qa)
+  — Literature research agent that retrieves evidence from papers
+  and generates cited answers
+- [data-to-paper](https://github.com/Technion-Kishony-lab/data-to-paper)
+  — Research agent system linking data analysis, generated results,
+  and manuscript text with traceability
+
+
+## Repo for the session (including the Ralph loop)
+
+::: {.columns}
+::: {.column width="50%"}
+```{=latex}
+\centering
+\qrcode[height=4.0cm]{https://github.com/trr266/ac26_agents_wshop}
+```
+:::
+::: {.column width="50%"}
+**Slides, the Ralph loop, and the devcontainer**
+
+[github.com/trr266/ac26_agents_wshop](https://github.com/trr266/ac26_agents_wshop)
+:::
+:::

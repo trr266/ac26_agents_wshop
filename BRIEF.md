@@ -1,14 +1,12 @@
 # Research brief
 
-Replace this example with your project before running the loop.
-
-- Topic: How mandatory sustainability reporting affects financial reporting quality.
-- Deliverable: Research proposal; explicitly label it as a proposal.
-- Research question: Develop a focused accounting question and explain its contribution.
-- Inputs: No data or references supplied yet. Do not invent either.
-- Paper: About 6 pages, excluding references. Include motivation, mechanism,
-  hypotheses, proposed data and research design, identification threats, and limitations.
-- Slides: About 8 frames for an academic accounting workshop.
-- Completion: Compiling proposal with clearly marked missing evidence and citation
-  placeholders is acceptable. Do not present proposed analyses as completed results.
+- Topic: The price earnings ratio of U.S. companies, 1975 to 2026
+- Deliverable: A small deck of Quarto beamer slides using the sty file in 
+  materials. Calculate FY PER at the firm level and prepare a set of informative
+  and visually pleasing figures, both across time and cross-sectionally.
+  Link time-trends to macro-market events. You can also add some more 
+  micro-level analyses (e.g., for specific firms if they have an interesting
+  history) or contrast a balanced with an un-balanced sample.
+- Inputs: WRDS Compustat data _only_ (you should have access via postgres)
+- Completion: slides should be ready to be presented to an MBA class
 - Author: Ralph Wiggum

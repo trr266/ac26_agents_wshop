@@ -1,14 +1,17 @@
 {
-  "name": "rwa",
+  "name": "ac26_agents_wshop",
   "build": {
     "dockerfile": "Dockerfile"
   },
-  "workspaceFolder": "/workspaces/rwa",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/ac26_agents_wshop,type=bind",
+  "workspaceFolder": "/workspaces/ac26_agents_wshop",
   "remoteUser": "rstudio",
   "postCreateCommand": "bash .devcontainer/post_create.sh",
   "postStartCommand": "sudo rstudio-server start",
-  "shutdownAction": "stopCompose",
-  "forwardPorts": [8787],
+  "shutdownAction": "stopContainer",
+  "forwardPorts": [
+    8787
+  ],
   "portsAttributes": {
     "8787": {
       "label": "RStudio"
@@ -22,12 +25,13 @@
         "ms-python.python",
         "ms-python.debugpy",
         "ms-python.vscode-pylance",
-        "mechatroner.rainbow-csv"
+        "mechatroner.rainbow-csv",
+        "anthropic.claude-code",
+        "openai.chatgpt"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/workspaces/rwa/.venv/bin/python",
+        "python.defaultInterpreterPath": "/workspaces/ac26_agents_wshop/.venv/bin/python",
         "python.terminal.activateEnvironment": true,
-        "python.venvPath": "/workspaces/rwa/.venv",
         "r.rpath.linux": "/usr/local/bin/R",
         "r.lsp.path": "/usr/local/bin/R",
         "r.lsp.debug": false

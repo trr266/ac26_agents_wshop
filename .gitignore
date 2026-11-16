@@ -5,6 +5,7 @@ PROGRESS.md
 .DS_Store
 .Rproj.user
 *.Rproj
+.Rhistory
 .venv/
 missfont.log
 .quarto/

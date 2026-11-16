@@ -190,6 +190,9 @@ An AI agent is an AI model operating in a loop: it reasons, calls tools, observe
  box/.style={draw=petroltrr,rounded corners,minimum width=2.6cm,minimum height=.8cm,align=center,font=\small},
  lab/.style={font=\scriptsize,text=petroltrr}]
 \node[box,fill=inputfill] (brief) at (-4.5,0) {Brief + prompt};
+% Static frame from i_am_learnding.gif for the PDF deck.
+\node[anchor=north west,inner sep=0pt] at ([yshift=-.4cm]brief.south west)
+  {\includegraphics[width=2.5cm]{materials/i_am_learnding.png}};
 \node[box,fill=modelfill] (agent) at (-1.3,0) {Fresh agent run\\[-1pt]{\scriptsize (the agent loop)}};
 \node[box,fill=toolfill] (build) at (2,0) {Build PDF};
 \node[box,fill=inputfill] (check) at (2,-1.6) {DONE + build ok?};
@@ -341,18 +344,6 @@ A short shell script restarts a fresh agent until it replies DONE and the docume
 ```
 
 [chenandrewy/EconYoloBox](https://github.com/chenandrewy/EconYoloBox) 
-
-
-## Privacy depends on where information travels
-
-**Trace the path:** local files → tool output → model context → logs or external services
-
-- Local code execution does not imply local model inference
-- Check institutional rules, data licenses, and the provider's applicable terms
-- Use public/synthetic examples until the environment is approved for the data
-- Treat retrieved documents and repository text as untrusted inputs
-
-**Prompt injection:** a document may contain instructions that try to redirect the agent. Keep tool permissions narrow and inspect consequential actions
 
 
 ## Keep the human (you) in the loop

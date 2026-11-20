@@ -19,21 +19,22 @@ poll_plot_labels <- c(
 )
 
 load_poll_data <- function(data_source = "mock", csv_url = "",
-                           mock_path = "poll/mock_responses.csv") {
+                           mock_path = "poll/mock_responses.csv",
+                           live_path = "poll/live_responses.csv") {
   if (length(data_source) != 1L || !data_source %in% c("mock", "live")) {
     stop("poll_source must be 'mock' or 'live'.", call. = FALSE)
   }
-  path <- mock_path
-  if (data_source == "live") {
+  path <- if (data_source == "live") live_path else mock_path
+  download_live <- data_source == "live" && !file.exists(path)
+  if (download_live) {
     if (length(csv_url) != 1L || is.na(csv_url) ||
         !grepl("^https?://", csv_url)) {
       stop(paste(
         "Live mode needs poll_csv_url: a readable response-Sheet CSV URL.",
-        "The forms.gle respondent URL does not expose responses.",
-        "See poll/README.md. No mock-data fallback was used."
+        "The forms.gle respondent URL does not expose responses."
       ), call. = FALSE)
     }
-    path <- tempfile(fileext = ".csv")
+    path <- tempfile(tmpdir = dirname(live_path), fileext = ".csv")
     on.exit(unlink(path), add = TRUE)
     old_timeout <- getOption("timeout")
     options(timeout = max(45, old_timeout))
@@ -66,11 +67,24 @@ load_poll_data <- function(data_source = "mock", csv_url = "",
       paste(missing, collapse = "\n")
     ), call. = FALSE)
   }
-  scores <- lapply(responses[poll_columns], function(values) {
-    values <- trimws(values)
+  scores <- lapply(seq_along(poll_columns), function(i) {
+    values <- trimws(responses[[poll_columns[i]]])
     values[!is.na(values) & values == ""] <- NA_character_
-    if (any(!is.na(values) & !values %in% poll_choices)) {
-      stop("Unexpected answer label in the CSV; check form/schema changes.", call. = FALSE)
+    unexpected <- which(!is.na(values) & !values %in% poll_choices)
+    if (length(unexpected)) {
+      selections <- strsplit(values[unexpected], ",", fixed = TRUE)
+      multiple <- vapply(selections, function(labels) {
+        length(labels) > 1L && all(trimws(labels) %in% poll_choices)
+      }, logical(1))
+      if (any(!multiple)) {
+        stop(sprintf("Unexpected answer label in the CSV for %s: %s",
+                     poll_rows[i], paste(unique(values[unexpected[!multiple]]),
+                                         collapse = "; ")),
+             call. = FALSE)
+      }
+      warning(sprintf("Excluded %d poll response cell(s) with multiple selections for %s.",
+                      length(unexpected), poll_rows[i]), call. = FALSE)
+      values[unexpected] <- NA_character_
     }
     match(values, poll_choices) - 1L
   })
@@ -85,6 +99,9 @@ load_poll_data <- function(data_source = "mock", csv_url = "",
   }))
   if (nrow(responses) > 0L && any(summary$n == 0L)) {
     stop("At least one category has no valid answers; cannot plot all five means.", call. = FALSE)
+  }
+  if (download_live && !file.exists(live_path) && !file.rename(path, live_path)) {
+    stop("Could not save live poll CSV: ", live_path, call. = FALSE)
   }
   summary$category <- factor(summary$category, levels = rev(poll_plot_labels))
   list(responses = responses, summary = summary, source = data_source)

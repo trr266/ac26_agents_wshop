@@ -78,8 +78,8 @@ execute:
 #| out-width: 100%
 #| dev: cairo_pdf
 
-# Switch in YAML params above, or set GF_POLL_SOURCE=live and GF_POLL_CSV_URL.
-# Live mode requires the response Sheet's CSV URL, not the respondent form URL.
+# Live mode reuses poll/live_responses.csv when present.
+# Delete that file to refresh it from the response Sheet's CSV URL.
 source("poll/poll_results.R", local = TRUE)
 poll <- load_poll_data(
   data_source = params$poll_source, csv_url = params$poll_csv_url
